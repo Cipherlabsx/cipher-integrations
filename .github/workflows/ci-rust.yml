@@ -1,0 +1,21 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["crates/**", "Cargo.toml", "Cargo.lock"]
+  pull_request:
+    paths: ["crates/**", "Cargo.toml", "Cargo.lock"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+      - run: cargo clippy --workspace -- -D warnings

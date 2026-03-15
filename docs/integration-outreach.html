@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CipherDLMM — Integration Outreach Kit</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e0e0e8;
+    --muted: #8888a0;
+    --accent: #6c5ce7;
+    --accent2: #a29bfe;
+    --green: #00b894;
+    --yellow: #fdcb6e;
+    --red: #e17055;
+    --blue: #74b9ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(135deg, var(--accent2), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+    margin: 2.5rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent2);
+  }
+  h3 {
+    font-size: 1rem;
+    margin: 1.2rem 0 0.5rem;
+    color: var(--text);
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .card-header .icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .card-header h3 { margin: 0; font-size: 1.1rem; }
+  .card-header .status {
+    margin-left: auto;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-ready { background: rgba(0,184,148,0.15); color: var(--green); }
+  .status-needs-work { background: rgba(253,203,110,0.15); color: var(--yellow); }
+  .status-auto { background: rgba(116,185,255,0.15); color: var(--blue); }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0.4rem 1rem;
+    font-size: 0.88rem;
+  }
+  .info-grid dt { color: var(--muted); }
+  .info-grid dd { color: var(--text); }
+
+  code, .mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82rem;
+    background: var(--surface2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    word-break: break-all;
+  }
+  pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    line-height: 1.5;
+    margin: 0.75rem 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin: 0.75rem 0;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+
+  .actions {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 0.75rem;
+  }
+  .actions h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent2);
+    margin-bottom: 0.5rem;
+  }
+  .actions ol {
+    padding-left: 1.25rem;
+    font-size: 0.88rem;
+  }
+  .actions li { margin-bottom: 0.3rem; }
+  .actions li::marker { color: var(--accent); }
+
+  .event-schema {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 0.75rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+  }
+  .event-schema .field { display: flex; gap: 1rem; margin: 0.2rem 0; }
+  .event-schema .field-name { color: var(--accent2); font-family: monospace; min-width: 180px; }
+  .event-schema .field-type { color: var(--muted); font-family: monospace; min-width: 80px; }
+
+  .api-table code { border: none; background: none; padding: 0; }
+
+  .summary-box {
+    background: linear-gradient(135deg, rgba(108,92,231,0.1), rgba(116,185,255,0.1));
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .summary-box h3 { color: var(--accent2); margin-bottom: 0.5rem; }
+
+  .copy-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+  }
+  .copy-btn:hover { background: var(--accent2); }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2rem 0;
+  }
+
+  @media print {
+    body { background: white; color: #1a1a1a; }
+    .card { border-color: #ddd; }
+    code { background: #f5f5f5; border-color: #ddd; }
+    pre { background: #f5f5f5; border-color: #ddd; }
+    h1 { -webkit-text-fill-color: #333; background: none; }
+    h2 { color: #333; }
+  }
+</style>
+</head>
+<body>
+
+<h1>CipherDLMM Integration Outreach Kit</h1>
+<p class="subtitle">Orbit Finance &mdash; Concentrated Liquidity DLMM on Solana</p>
+
+<div class="summary-box">
+  <h3>Protocol Details</h3>
+  <dl class="info-grid">
+    <dt>Protocol</dt>
+    <dd>CipherDLMM (Orbit Finance)</dd>
+    <dt>Type</dt>
+    <dd>Concentrated Liquidity DLMM (Discretized Liquidity Market Maker)</dd>
+    <dt>Network</dt>
+    <dd>Solana Mainnet</dd>
+    <dt>Program ID</dt>
+    <dd><code>Fn3fA3fjsmpULNL7E9U79jKTe1KHxPtQeWdURCbJXCnM</code>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('Fn3fA3fjsmpULNL7E9U79jKTe1KHxPtQeWdURCbJXCnM')">Copy</button>
+    </dd>
+    <dt>CIPHER Token</dt>
+    <dd><code>Ciphern9cCXtms66s8Mm6wCFC27b2JProRQLYmiLMH3N</code>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('Ciphern9cCXtms66s8Mm6wCFC27b2JProRQLYmiLMH3N')">Copy</button>
+    </dd>
+    <dt>Framework</dt>
+    <dd>Anchor 0.31.1</dd>
+    <dt>Adapter API</dt>
+    <dd><code>https://orbit-dex.api.cipherlabsx.com</code></dd>
+    <dt>Website</dt>
+    <dd>orbitdex.io</dd>
+  </dl>
+</div>
+
+<!-- ========== JUPITER ========== -->
+<h2>1. Jupiter</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="icon" style="background:rgba(108,92,231,0.2);color:var(--accent2);">J</div>
+    <h3>Jupiter Aggregator — AMM Adapter</h3>
+    <span class="status status-ready">Adapter Ready</span>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem;">
+    Rust crate implementing <code>jupiter-amm-interface::Amm</code> (v0.6.0). Pure Rust, compiled into Jupiter's Iris routing binary. 34 unit tests passing.
+  </p>
+
+  <dl class="info-grid">
+    <dt>Crate</dt>
+    <dd><code>cipher-dlmm-jup</code></dd>
+    <dt>Interface</dt>
+    <dd><code>jupiter-amm-interface = "=0.6.0"</code></dd>
+    <dt>Submit to</dt>
+    <dd><code>github.com/jup-ag/jupiter-amm-implementation</code></dd>
+    <dt>Swap variant</dt>
+    <dd>Needs new <code>Swap::CipherDlmm</code> enum — instruction discriminator differs from Meteora. Using <code>Swap::MeteoraDlmm</code> as placeholder.</dd>
+    <dt>Discriminator</dt>
+    <dd><code>[248, 198, 158, 145, 225, 117, 135, 200]</code></dd>
+    <dt>Discord</dt>
+    <dd>Jupiter <code>#developer-support</code> channel</dd>
+  </dl>
+
+  <table>
+    <thead><tr><th>Feature</th><th>Supported</th></tr></thead>
+    <tbody>
+      <tr><td>ExactIn</td><td style="color:var(--green);">Yes</td></tr>
+      <tr><td>ExactOut</td><td style="color:var(--green);">Yes</td></tr>
+      <tr><td>Dynamic accounts</td><td style="color:var(--green);">Yes (BinArrays vary per active bin)</td></tr>
+      <tr><td>Bidirectional</td><td style="color:var(--green);">Yes</td></tr>
+      <tr><td>Pause detection</td><td style="color:var(--green);">Yes (<code>is_active()</code> checks pause_bits)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Swap Instruction Accounts (12 fixed + dynamic)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Account</th><th>Flags</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>pool</td><td>writable</td></tr>
+      <tr><td>1</td><td>user</td><td>signer</td></tr>
+      <tr><td>2</td><td>user_source</td><td>writable</td></tr>
+      <tr><td>3</td><td>user_destination</td><td>writable</td></tr>
+      <tr><td>4</td><td>base_vault</td><td>writable</td></tr>
+      <tr><td>5</td><td>quote_vault</td><td>writable</td></tr>
+      <tr><td>6</td><td>protocol_fee_vault</td><td>writable</td></tr>
+      <tr><td>7</td><td>creator_fee_vault</td><td>writable</td></tr>
+      <tr><td>8</td><td>holders_fee_vault</td><td>writable</td></tr>
+      <tr><td>9</td><td>nft_fee_vault</td><td>writable</td></tr>
+      <tr><td>10</td><td>cipher_mint</td><td>read-only</td></tr>
+      <tr><td>11</td><td>token_program</td><td>read-only</td></tr>
+      <tr><td>12+</td><td>BinArray PDAs</td><td>writable (ordered by traversal direction)</td></tr>
+      <tr><td>N</td><td>Oracle PDA</td><td>writable (optional)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="actions">
+    <h4>Action Items</h4>
+    <ol>
+      <li>Push <code>cipher-integrations</code> repo to GitHub under <code>cipherlabsx</code></li>
+      <li>Fork <code>jup-ag/jupiter-amm-implementation</code></li>
+      <li>Add crate as workspace member, register via <code>create_entries_for_amm::&lt;CipherDlmmAmm&gt;()</code></li>
+      <li>Run snapshot tests against live pools</li>
+      <li>Open PR &mdash; simultaneously message Jupiter Discord <code>#developer-support</code></li>
+    </ol>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== DEFILLAMA ========== -->
+<h2>2. DefiLlama</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="icon" style="background:rgba(0,184,148,0.2);color:var(--green);">DL</div>
+    <h3>DefiLlama — Volume &amp; Fees</h3>
+    <span class="status status-ready">PR Ready</span>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem;">
+    Dimension-adapter reporting daily volume and fees. Fetches from the Orbit DEX adapter API.
+  </p>
+
+  <dl class="info-grid">
+    <dt>Submit to</dt>
+    <dd><code>github.com/DefiLlama/dimension-adapters</code></dd>
+    <dt>File path</dt>
+    <dd><code>dexs/orbit-finance/index.ts</code></dd>
+    <dt>Methodology</dt>
+    <dd>Aggregate 24h swap volume across all pools, convert to USD via quote token prices. Fees = volume &times; pool fee rate.</dd>
+  </dl>
+
+  <h3>Data Flow</h3>
+  <pre>GET /api/v1/pools           → pool IDs, quote mints, fee rates
+GET /api/v1/volumes?tf=24h  → 24h volume per pool (quote-denominated)
+GET /api/v1/tokens/prices   → quote token USD prices
+
+dailyVolume = Σ(volumeQuote × quotePriceUsd)
+dailyFees   = Σ(volumeUsd × baseFeeBps / 10000)</pre>
+
+  <div class="actions">
+    <h4>Action Items</h4>
+    <ol>
+      <li>Fork <code>DefiLlama/dimension-adapters</code></li>
+      <li>Copy <code>pr/orbit-finance.ts</code> &rarr; <code>dexs/orbit-finance/index.ts</code></li>
+      <li>Open PR with title: "Add CipherDLMM (Orbit Finance) DEX volume adapter"</li>
+    </ol>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="icon" style="background:rgba(0,184,148,0.2);color:var(--green);">DL</div>
+    <h3>DefiLlama — TVL</h3>
+    <span class="status status-ready">PR Ready</span>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem;">
+    TVL adapter. Enumerates pool vaults via API, verifies on-chain balances with <code>sumTokens2</code>.
+  </p>
+
+  <dl class="info-grid">
+    <dt>Submit to</dt>
+    <dd><code>github.com/DefiLlama/DefiLlama-Adapters</code></dd>
+    <dt>File path</dt>
+    <dd><code>projects/orbit-finance/index.js</code></dd>
+    <dt>Methodology</dt>
+    <dd>TVL = sum of SPL token balances in all pool vaults (base + quote). Verified on-chain via DefiLlama's <code>sumTokens2</code>.</dd>
+  </dl>
+
+  <div class="actions">
+    <h4>Action Items</h4>
+    <ol>
+      <li>Fork <code>DefiLlama/DefiLlama-Adapters</code></li>
+      <li>Copy <code>pr/orbit-finance.ts</code> &rarr; <code>projects/orbit-finance/index.js</code></li>
+      <li>Open PR with title: "Add CipherDLMM (Orbit Finance) TVL adapter"</li>
+    </ol>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== GECKOTERMINAL ========== -->
+<h2>3. GeckoTerminal (CoinGecko)</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="icon" style="background:rgba(253,203,110,0.2);color:var(--yellow);">GT</div>
+    <h3>GeckoTerminal — DEX Listing</h3>
+    <span class="status status-needs-work">Needs API Gaps Fixed</span>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem;">
+    Pool charts, analytics, and discoverability via CoinGecko's Non-EVM DEX program.
+  </p>
+
+  <h3>API Endpoint Compliance</h3>
+  <table class="api-table">
+    <thead><tr><th>GT Requires</th><th>Our Endpoint</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Pool list</td><td><code>GET /api/v1/pools</code></td><td style="color:var(--green);">Ready</td></tr>
+      <tr><td>Trade events</td><td><code>GET /api/v1/trades/{pool}</code></td><td style="color:var(--green);">Ready</td></tr>
+      <tr><td>OHLCV candles</td><td><code>GET /api/v1/candles/{pool}</code></td><td style="color:var(--green);">Ready</td></tr>
+      <tr><td><code>priceUsd</code> per pair</td><td>Currently quote-denominated only</td><td style="color:var(--yellow);">Gap</td></tr>
+      <tr><td><code>liquidityUsd</code></td><td>Currently <code>liquidityQuote</code></td><td style="color:var(--yellow);">Gap</td></tr>
+      <tr><td>Pool reserves</td><td>Not exposed</td><td style="color:var(--yellow);">Gap</td></tr>
+    </tbody>
+  </table>
+
+  <div class="actions">
+    <h4>Action Items</h4>
+    <ol>
+      <li>Add <code>priceUsd</code>, <code>liquidityUsd</code>, <code>reserveBase</code>, <code>reserveQuote</code> fields to adapter API <code>/api/v1/pools</code></li>
+      <li>Submit GeckoTerminal Non-EVM DEX listing form</li>
+      <li>Provide API base URL and pool sample addresses</li>
+    </ol>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== DEXSCREENER ========== -->
+<h2>4. DexScreener</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="icon" style="background:rgba(116,185,255,0.2);color:var(--blue);">DS</div>
+    <h3>DexScreener — On-Chain Event Indexing</h3>
+    <span class="status status-ready">Ready to Submit</span>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem;">
+    DexScreener indexes on-chain events directly. No API needed &mdash; they parse Solana transaction logs using the IDL.
+  </p>
+
+  <h3>SwapExecuted Event</h3>
+  <div class="event-schema">
+    <div class="field"><span class="field-name">pool</span><span class="field-type">Pubkey</span> Pool address</div>
+    <div class="field"><span class="field-name">user</span><span class="field-type">Pubkey</span> Trader wallet</div>
+    <div class="field"><span class="field-name">in_mint</span><span class="field-type">Pubkey</span> Input token mint</div>
+    <div class="field"><span class="field-name">out_mint</span><span class="field-type">Pubkey</span> Output token mint</div>
+    <div class="field"><span class="field-name">amount_in</span><span class="field-type">u64</span> Input amount (raw)</div>
+    <div class="field"><span class="field-name">amount_out</span><span class="field-type">u64</span> Output amount (raw)</div>
+    <div class="field"><span class="field-name">total_fee</span><span class="field-type">u64</span> Total fee charged</div>
+    <div class="field"><span class="field-name">price_after_q64_64</span><span class="field-type">u128</span> Post-swap price (Q64.64 fixed-point)</div>
+    <div class="field"><span class="field-name">ts</span><span class="field-type">i64</span> Unix timestamp</div>
+  </div>
+
+  <h3>Other Events Available</h3>
+  <table>
+    <thead><tr><th>Event</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>PoolInitialized</code></td><td>New pool creation</td></tr>
+      <tr><td><code>LiquidityDeposited</code></td><td>LP deposits (base/quote amounts, shares minted)</td></tr>
+      <tr><td><code>LiquidityWithdrawnUser</code></td><td>LP withdrawals</td></tr>
+      <tr><td><code>FeesDistributed</code></td><td>Fee breakdown: protocol, creator, holders, NFT</td></tr>
+      <tr><td><code>BinLiquidityUpdated</code></td><td>Real-time bin reserve changes</td></tr>
+    </tbody>
+  </table>
+
+  <div class="actions">
+    <h4>Action Items</h4>
+    <ol>
+      <li>Submit DexScreener DEX listing request with program ID</li>
+      <li>Attach IDL file (<code>orbit_finance.json</code>)</li>
+      <li>DexScreener team adds event parser &rarr; pools appear automatically</li>
+    </ol>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== BIRDEYE ========== -->
+<h2>5. Birdeye</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="icon" style="background:rgba(116,185,255,0.2);color:var(--blue);">BE</div>
+    <h3>Birdeye — Token Analytics</h3>
+    <span class="status status-ready">Ready to Submit</span>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem;">
+    Birdeye indexes Solana programs directly. Provides token charts, portfolio tracking, and analytics. Same approach as DexScreener &mdash; submit program ID + IDL.
+  </p>
+
+  <div class="actions">
+    <h4>Action Items</h4>
+    <ol>
+      <li>Submit Birdeye DEX listing / partnership form</li>
+      <li>Provide program ID + IDL</li>
+      <li>Birdeye indexes <code>SwapExecuted</code> events for trade data</li>
+    </ol>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== TITAN ========== -->
+<h2>6. Titan</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="icon" style="background:rgba(116,185,255,0.2);color:var(--blue);">T</div>
+    <h3>Titan — Meta-Aggregator</h3>
+    <span class="status status-auto">Automatic</span>
+  </div>
+  <p style="font-size:0.88rem;color:var(--muted);">
+    Titan automatically meta-aggregates Jupiter. Once Jupiter integration goes live, CipherDLMM pools appear on Titan with zero additional work.
+  </p>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== PRIORITY ========== -->
+<h2>Priority &amp; Timeline</h2>
+
+<table>
+  <thead><tr><th>#</th><th>Integration</th><th>Effort</th><th>Blocker?</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><strong>DefiLlama Volume</strong></td><td>Submit PR</td><td style="color:var(--green);">None</td><td>Analytics dashboards</td></tr>
+    <tr><td>2</td><td><strong>DefiLlama TVL</strong></td><td>Submit PR</td><td style="color:var(--green);">None</td><td>TVL tracking</td></tr>
+    <tr><td>3</td><td><strong>DexScreener</strong></td><td>Submit form</td><td style="color:var(--green);">None</td><td>Trade charts</td></tr>
+    <tr><td>4</td><td><strong>Birdeye</strong></td><td>Submit form</td><td style="color:var(--green);">None</td><td>Token analytics</td></tr>
+    <tr><td>5</td><td><strong>GeckoTerminal</strong></td><td>Fix 3 API fields + form</td><td style="color:var(--yellow);">API gaps</td><td>CoinGecko charts</td></tr>
+    <tr><td>6</td><td><strong>Jupiter</strong></td><td>PR + Discord</td><td style="color:var(--red);">Audit + traction</td><td>Swap routing (highest)</td></tr>
+    <tr><td>7</td><td><strong>Titan</strong></td><td>None</td><td style="color:var(--green);">Follows Jupiter</td><td>Meta-aggregation</td></tr>
+  </tbody>
+</table>
+
+<div class="summary-box" style="margin-top:2rem;">
+  <h3>Key API Endpoints (for all integrations)</h3>
+  <table style="margin:0;">
+    <thead><tr><th>Endpoint</th><th>Returns</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /api/v1/pools</code></td><td>All pools with mints, vaults, fees, liquidity</td></tr>
+      <tr><td><code>GET /api/v1/volumes?tf=24h&amp;pools=...</code></td><td>24h volume per pool (quote-denominated)</td></tr>
+      <tr><td><code>GET /api/v1/tokens/prices?mints=...</code></td><td>USD prices for token mints</td></tr>
+      <tr><td><code>GET /api/v1/trades/{pool}</code></td><td>Recent trade history</td></tr>
+      <tr><td><code>GET /api/v1/candles/{pool}</code></td><td>OHLCV candlestick data</td></tr>
+      <tr><td><code>GET /api/v1/tokens</code></td><td>Token registry (symbols, decimals, logos)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p style="color:var(--muted);font-size:0.8rem;margin-top:2rem;text-align:center;">
+  CipherDLMM &mdash; Orbit Finance &mdash; Generated March 2026
+</p>
+
+</body>
+</html>
