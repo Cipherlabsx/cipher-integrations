@@ -390,7 +390,7 @@ dailyFees   = Σ(volumeUsd × baseFeeBps / 10000)</pre>
   <div class="card-header">
     <div class="icon" style="background:rgba(253,203,110,0.2);color:var(--yellow);">GT</div>
     <h3>GeckoTerminal — DEX Listing</h3>
-    <span class="status status-needs-work">Needs API Gaps Fixed</span>
+    <span class="status status-ready">Ready to Submit</span>
   </div>
   <p style="font-size:0.88rem;color:var(--muted);margin-bottom:0.75rem;">
     Pool charts, analytics, and discoverability via CoinGecko's Non-EVM DEX program.
@@ -403,18 +403,18 @@ dailyFees   = Σ(volumeUsd × baseFeeBps / 10000)</pre>
       <tr><td>Pool list</td><td><code>GET /api/v1/pools</code></td><td style="color:var(--green);">Ready</td></tr>
       <tr><td>Trade events</td><td><code>GET /api/v1/trades/{pool}</code></td><td style="color:var(--green);">Ready</td></tr>
       <tr><td>OHLCV candles</td><td><code>GET /api/v1/candles/{pool}</code></td><td style="color:var(--green);">Ready</td></tr>
-      <tr><td><code>priceUsd</code> per pair</td><td>Currently quote-denominated only</td><td style="color:var(--yellow);">Gap</td></tr>
-      <tr><td><code>liquidityUsd</code></td><td>Currently <code>liquidityQuote</code></td><td style="color:var(--yellow);">Gap</td></tr>
-      <tr><td>Pool reserves</td><td>Not exposed</td><td style="color:var(--yellow);">Gap</td></tr>
+      <tr><td><code>priceUsd</code> per pair</td><td><code>GET /api/v1/pools</code> → <code>priceUsd</code></td><td style="color:var(--green);">Ready</td></tr>
+      <tr><td><code>liquidityUsd</code></td><td><code>GET /api/v1/pools</code> → <code>liquidityUsd</code></td><td style="color:var(--green);">Ready</td></tr>
+      <tr><td>Pool reserves</td><td><code>GET /api/v1/pools</code> → <code>reserveBaseUi</code>, <code>reserveQuoteUi</code></td><td style="color:var(--green);">Ready</td></tr>
     </tbody>
   </table>
 
   <div class="actions">
     <h4>Action Items</h4>
     <ol>
-      <li>Add <code>priceUsd</code>, <code>liquidityUsd</code>, <code>reserveBase</code>, <code>reserveQuote</code> fields to adapter API <code>/api/v1/pools</code></li>
       <li>Submit GeckoTerminal Non-EVM DEX listing form</li>
-      <li>Provide API base URL and pool sample addresses</li>
+      <li>Provide API base URL: <code>https://orbit-dex.api.cipherlabsx.com</code></li>
+      <li>Provide pool sample addresses and program ID</li>
     </ol>
   </div>
 </div>
@@ -522,7 +522,7 @@ dailyFees   = Σ(volumeUsd × baseFeeBps / 10000)</pre>
     <tr><td>2</td><td><strong>DefiLlama TVL</strong></td><td>Submit PR</td><td style="color:var(--green);">None</td><td>TVL tracking</td></tr>
     <tr><td>3</td><td><strong>DexScreener</strong></td><td>Submit form</td><td style="color:var(--green);">None</td><td>Trade charts</td></tr>
     <tr><td>4</td><td><strong>Birdeye</strong></td><td>Submit form</td><td style="color:var(--green);">None</td><td>Token analytics</td></tr>
-    <tr><td>5</td><td><strong>GeckoTerminal</strong></td><td>Fix 3 API fields + form</td><td style="color:var(--yellow);">API gaps</td><td>CoinGecko charts</td></tr>
+    <tr><td>5</td><td><strong>GeckoTerminal</strong></td><td>Submit form</td><td style="color:var(--green);">None</td><td>CoinGecko charts</td></tr>
     <tr><td>6</td><td><strong>Jupiter</strong></td><td>PR + Discord</td><td style="color:var(--red);">Audit + traction</td><td>Swap routing (highest)</td></tr>
     <tr><td>7</td><td><strong>Titan</strong></td><td>None</td><td style="color:var(--green);">Follows Jupiter</td><td>Meta-aggregation</td></tr>
   </tbody>
