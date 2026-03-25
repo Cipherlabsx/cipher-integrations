@@ -1,95 +1,88 @@
 /**
- * CipherDLMM (Orbit Finance) — DefiLlama dimension-adapter
+ * CipherDLMM (Orbit Finance) — volume + fees adapter via Dune
  *
- * Submittable to: DefiLlama/dimension-adapters  →  dexs/orbit-finance/index.ts
- *
- * This file is self-contained — no imports beyond DefiLlama's own helpers.
- * It fetches volume and fee data from the Orbit DEX adapter API.
+ * Submittable to: DefiLlama/dimension-adapters  →  dexs/orbit-finance.ts
  *
  * Program ID: Fn3fA3fjsmpULNL7E9U79jKTe1KHxPtQeWdURCbJXCnM
- * Network: Solana Mainnet
+ * Network:    Solana mainnet
+ *
+ * Methodology
+ *   Volume — For each swap instruction on the CipherDLMM program, we sum the
+ *            USD-valued SPL token transfers (via Dune price feeds) and take
+ *            the input side (larger of the two transfers) as the swap volume.
+ *   Fees   — Difference between input and output USD values per swap.
+ *            Fees are embedded in the input amount and retained by the pool's
+ *            liquidity bins (not transferred separately).
  */
 
-import { SimpleAdapter, FetchResultVolume } from "../../helpers/customBackfill";
+import { Dependencies, FetchOptions, SimpleAdapter } from "../../adapters/types";
 import { CHAIN } from "../../helpers/chains";
-import fetchURL from "../../utils/fetchURL";
+import { queryDuneSql } from "../../helpers/dune";
 
-const ADAPTER_BASE = "https://orbit-dex.api.cipherlabsx.com";
+// CipherDLMM program on Solana mainnet
+const PROGRAM_ID = "Fn3fA3fjsmpULNL7E9U79jKTe1KHxPtQeWdURCbJXCnM";
+// Anchor discriminator for the "swap" instruction: sha256("global:swap")[:8]
+const SWAP_DISC = "0xf8c69e91e17587c8";
 
-interface AdapterPool {
-  id: string;
-  quoteMint: string;
-  baseFeeBps: number;
-}
+const fetch = async (_a: any, _b: any, options: FetchOptions) => {
+    const query = `
+        WITH swap_ixs AS (
+            SELECT tx_id, outer_instruction_index
+            FROM solana.instruction_calls
+            WHERE executing_account = '${PROGRAM_ID}'
+                AND bytearray_substring(data, 1, 8) = ${SWAP_DISC}
+                AND TIME_RANGE
+                AND tx_success = true
+        ),
+        swap_transfers AS (
+            SELECT
+                t.tx_id,
+                t.outer_instruction_index,
+                t.amount_usd
+            FROM tokens_solana.transfers t
+            JOIN swap_ixs s
+                ON t.tx_id = s.tx_id
+                AND t.outer_instruction_index = s.outer_instruction_index
+            WHERE t.block_time >= from_unixtime(${options.startTimestamp})
+                AND t.block_time <= from_unixtime(${options.endTimestamp})
+                AND t.amount_usd IS NOT NULL
+                AND t.amount_usd > 0
+        ),
+        per_swap AS (
+            SELECT
+                tx_id,
+                outer_instruction_index,
+                MAX(amount_usd) AS input_usd,
+                MIN(amount_usd) AS output_usd
+            FROM swap_transfers
+            GROUP BY tx_id, outer_instruction_index
+        )
+        SELECT
+            COALESCE(SUM(input_usd), 0) AS daily_volume,
+            COALESCE(SUM(input_usd - output_usd), 0) AS daily_fees
+        FROM per_swap
+    `;
 
-const fetch = async (timestamp: number): Promise<FetchResultVolume> => {
-  // 1. Fetch all pools
-  const poolsResp = await fetchURL(`${ADAPTER_BASE}/api/v1/pools`);
-  const pools: AdapterPool[] = Array.isArray(poolsResp?.pools)
-    ? poolsResp.pools
-    : [];
+    const data = await queryDuneSql(options, query);
 
-  if (pools.length === 0) {
-    return { dailyVolume: "0", dailyFees: "0", timestamp };
-  }
-
-  const poolIds = pools.map((p) => p.id);
-  const quoteMints = [...new Set(pools.map((p) => p.quoteMint))];
-
-  // 2. Fetch 24h volumes + quote token USD prices in parallel
-  const [volResp, priceResp] = await Promise.all([
-    fetchURL(
-      `${ADAPTER_BASE}/api/v1/volumes?tf=24h&pools=${poolIds.join(",")}`
-    ),
-    fetchURL(
-      `${ADAPTER_BASE}/api/v1/tokens/prices?mints=${quoteMints.join(",")}`
-    ),
-  ]);
-
-  const volumes: Record<string, number> = volResp?.volumes ?? {};
-
-  const priceMap: Record<string, number> = {};
-  for (const p of priceResp?.prices ?? []) {
-    if (p?.mint && p.priceUsd != null && Number.isFinite(p.priceUsd)) {
-      priceMap[p.mint] = p.priceUsd;
-    }
-  }
-
-  // 3. Sum daily volume and fees in USD
-  let dailyVolume = 0;
-  let dailyFees = 0;
-
-  for (const pool of pools) {
-    const volQuote = volumes[pool.id] ?? 0;
-    const quotePrice = priceMap[pool.quoteMint] ?? 0;
-    const volUsd = volQuote * quotePrice;
-
-    dailyVolume += volUsd;
-    dailyFees += volUsd * ((pool.baseFeeBps ?? 0) / 10_000);
-  }
-
-  return {
-    dailyVolume: dailyVolume.toString(),
-    dailyFees: dailyFees.toString(),
-    timestamp,
-  };
+    return {
+        dailyVolume: data[0]?.daily_volume ?? 0,
+        dailyFees: data[0]?.daily_fees ?? 0,
+    };
 };
 
 const adapter: SimpleAdapter = {
-  adapter: {
-    [CHAIN.SOLANA]: {
-      fetch,
-      start: "2025-01-01",
-      meta: {
-        methodology: {
-          Volume:
-            "Sum of 24h swap volume across all CipherDLMM pools, converted to USD via quote token prices from the Orbit DEX adapter API.",
-          Fees:
-            "Volume multiplied by each pool's fee rate (base_fee_bps / 10000). Fees are charged in the quote token domain.",
-        },
-      },
+    fetch,
+    dependencies: [Dependencies.DUNE],
+    chains: [CHAIN.SOLANA],
+    start: "2025-01-01",
+    isExpensiveAdapter: true,
+    methodology: {
+        Volume:
+            "For each swap on the CipherDLMM program, the input-side USD value (from Dune token price feeds) is counted as volume.",
+        Fees:
+            "Difference between input and output USD values per swap. The fee is retained by the pool's concentrated-liquidity bins.",
     },
-  },
 };
 
 export default adapter;
